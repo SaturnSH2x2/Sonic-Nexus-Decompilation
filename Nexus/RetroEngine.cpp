@@ -240,7 +240,11 @@ void RetroEngine::Run()
     uint frameStart, frameEnd = SDL_GetTicks();
     float frameDelta = 0.0f;
 
+#if RETRO_PLATFORM == RETRO_3DS
+    while (running && aptMainLoop()) {
+#else
     while (running) {
+#endif
         frameStart = SDL_GetTicks();
         frameDelta = frameStart - frameEnd;
 

@@ -342,6 +342,7 @@ void writeSettings() {
 
 void initMods()
 {
+#if RETRO_PLATFORM != RETRO_3DS
     modCount        = 0;
 
     char modBuf[0x100];
@@ -457,9 +458,11 @@ void initMods()
             printLog(fe.what());
         }
     }
+#endif
 }
 void saveMods()
 {
+#if RETRO_PLATFORM != RETRO_3DS
     char modBuf[0x100];
     sprintf(modBuf, "%smods/", modsPath);
     std::filesystem::path modPath(modBuf);
@@ -487,5 +490,6 @@ void saveMods()
             }
         }
     }
+#endif
 }
 #endif

@@ -23,7 +23,7 @@ MusicPlaybackInfo musInfo;
 
 int trackBuffer = -1;
 
-#if RETRO_USING_SDL1 || RETRO_USING_SDL2
+#if RETRO_USING_SDL1_AUDIO || RETRO_USING_SDL2
 SDL_AudioSpec audioDeviceFormat;
 
 #if RETRO_USING_SDL2
@@ -50,7 +50,7 @@ SDL_AudioDeviceID audioDevice;
 int InitAudioPlayback()
 {
     StopAllSfx(); //"init"
-#if RETRO_USING_SDL1 || RETRO_USING_SDL2
+#if RETRO_USING_SDL1_AUDIO || RETRO_USING_SDL2
     SDL_AudioSpec want;
     want.freq     = AUDIO_FREQUENCY;
     want.format   = AUDIO_FORMAT;
@@ -69,7 +69,7 @@ int InitAudioPlayback()
         return true; // no audio but game wont crash now
     }
 
-#elif RETRO_USING_SDL1
+#elif RETRO_USING_SDL1_AUDIO
     if (SDL_OpenAudio(&want, &audioDeviceFormat) == 0) {
         audioEnabled = true;
         SDL_PauseAudio(0);
@@ -79,7 +79,7 @@ int InitAudioPlayback()
         audioEnabled = false;
         return true; // no audio but game wont crash now
     }
-#endif // !RETRO_USING_SDL1
+#endif // !RETRO_USING_SDL1_AUDIO
 
 #endif
 
@@ -152,7 +152,7 @@ void LoadGlobalSfx()
     for (int i = 0; i < CHANNEL_COUNT; ++i) sfxChannels[i].sfxID = -1;
 }
 
-#if RETRO_USING_SDL1 || RETRO_USING_SDL2
+#if RETRO_USING_SDL1_AUDIO || RETRO_USING_SDL2
 size_t readVorbis(void *mem, size_t size, size_t nmemb, void *ptr)
 {
     MusicPlaybackInfo *info = (MusicPlaybackInfo *)ptr;
@@ -192,7 +192,7 @@ void ProcessMusicStream(Sint32 *stream, size_t bytes_wanted)
 #if RETRO_USING_SDL2
             while (SDL_AudioStreamAvailable(musInfo.stream) < bytes_wanted) {
                 // We need more samples: get some
-                long bytes_read = ov_read(&musInfo.vorbisFile, (char *)musInfo.buffer, sizeof(musInfo.buffer), 0, 2, 1, &musInfo.vorbBitstream);
+               long bytes_read = ov_read(&musInfo.vorbisFile, (char *)musInfo.buffer, sizeof(musInfo.buffer), 0, 2, 1, &musInfo.vorbBitstream);
 
                 if (bytes_read == 0) {
                     // We've reached the end of the file
@@ -219,16 +219,23 @@ void ProcessMusicStream(Sint32 *stream, size_t bytes_wanted)
                 ProcessAudioMixing(stream, musInfo.buffer, bytes_done / sizeof(Sint16), (bgmVolume * masterVolume) / MAX_VOLUME, 0);
 #endif
 
-#if RETRO_USING_SDL1
+#if RETRO_USING_SDL1_AUDIO
             size_t bytes_gotten = 0;
             byte *buffer        = (byte *)malloc(bytes_wanted);
             memset(buffer, 0, bytes_wanted);
             while (bytes_gotten < bytes_wanted) {
                 // We need more samples: get some
+#if RETRO_PLATFORM == RETRO_3DS
+		// account for the API change with Tremor, as per usual
+		long bytes_read = ov_read(&musInfo.vorbisFile, (char*) musInfo.buffer,
+				sizeof(musInfo.buffer) > (bytes_wanted - bytes_gotten) ? (bytes_wanted - bytes_gotten) : sizeof(musInfo.buffer),
+				&musInfo.vorbBitstream);
+#else
                 long bytes_read =
                     ov_read(&musInfo.vorbisFile, (char *)musInfo.buffer,
                             sizeof(musInfo.buffer) > (bytes_wanted - bytes_gotten) ? (bytes_wanted - bytes_gotten) : sizeof(musInfo.buffer), 0, 2, 1,
                             &musInfo.vorbBitstream);
+#endif
 
                 if (bytes_read == 0) {
                     // We've reached the end of the file
@@ -335,7 +342,7 @@ void ProcessAudioPlayback(void *userdata, Uint8 *stream, int len)
             }
 #endif
 
-#if RETRO_USING_SDL1
+#if RETRO_USING_SDL1_AUDIO
             musInfo.spec.format   = AUDIO_S16;
             musInfo.spec.channels = musInfo.vorbisFile.vi->channels;
             musInfo.spec.freq     = (int)musInfo.vorbisFile.vi->rate;
@@ -396,7 +403,7 @@ void ProcessAudioPlayback(void *userdata, Uint8 *stream, int len)
                     }
                 }
 
-#if RETRO_USING_SDL1 || RETRO_USING_SDL2
+#if RETRO_USING_SDL1_AUDIO || RETRO_USING_SDL2
                 ProcessAudioMixing(mix_buffer, buffer, samples_done, sfxVolume, sfx->pan);
 #endif
             }
@@ -421,7 +428,7 @@ void ProcessAudioPlayback(void *userdata, Uint8 *stream, int len)
     }
 }
 
-#if RETRO_USING_SDL1 || RETRO_USING_SDL2
+#if RETRO_USING_SDL1_AUDIO || RETRO_USING_SDL2
 void ProcessAudioMixing(Sint32 *dst, const Sint16 *src, int len, int volume, sbyte pan)
 {
     if (volume == 0)
@@ -510,7 +517,7 @@ void LoadSfx(char *filePath, byte sfxID)
             for (int i = 0; i < info.fileSize; ++i) sfx[i] ^= 0xFF;
         }
 
-#if RETRO_USING_SDL1 || RETRO_USING_SDL2
+#if RETRO_USING_SDL1_AUDIO || RETRO_USING_SDL2
         SDL_LockAudio();
         SDL_RWops *src = SDL_RWFromMem(sfx, info.fileSize);
         if (src == NULL) {
@@ -518,7 +525,11 @@ void LoadSfx(char *filePath, byte sfxID)
         }
         else {
             SDL_AudioSpec wav_spec;
+#if RETRO_PLATFORM == RETRO_3DS
+	    long unsigned int wav_length;
+#else
             uint wav_length;
+#endif
             byte *wav_buffer;
             SDL_AudioSpec *wav = SDL_LoadWAV_RW(src, 0, &wav_spec, &wav_buffer, &wav_length);
 

@@ -2,7 +2,9 @@
 #define RETROENGINE_H
 
 // Disables POSIX use c++ name blah blah stuff
+#if RETRO_PLATFORM != RETRO_3DS
 #pragma warning(disable : 4996)
+#endif
 
 // Setting this to true removes (almost) ALL changes from the original code, the trade off is that a playable game cannot be built, it is advised to
 // be set to true only for preservation purposes
@@ -39,6 +41,7 @@ typedef unsigned int uint;
 #define RETRO_WP7      (6)
 // Custom Platforms start here
 #define RETRO_UWP  (7)
+#define RETRO_3DS  (8)
 
 // Platform types (Game manages platform-specific code such as HUD position using this rather than the above)
 #define RETRO_STANDARD (0)
@@ -69,6 +72,8 @@ typedef unsigned int uint;
 #else
 #error "Unknown Apple platform"
 #endif
+#elif defined _3DS
+#define RETRO_PLATFORM (RETRO_3DS)
 #else
 #define RETRO_PLATFORM (RETRO_WIN) // Default
 #endif
@@ -87,11 +92,31 @@ typedef unsigned int uint;
 
 #if RETRO_PLATFORM == RETRO_WIN || RETRO_PLATFORM == RETRO_OSX || RETRO_PLATFORM == RETRO_iOS                        \
     || RETRO_PLATFORM == RETRO_UWP
-#define RETRO_USING_SDL1 (0)
-#define RETRO_USING_SDL2 (1)
+#define RETRO_USING_SDL1       (0)
+#define RETRO_USING_SDL2       (1)
+#if RETRO_USING_SDL1
+#define RETRO_USING_SDL1_AUDIO (1)
+#else
+#define RETRO_USING_SDL1_AUDIO (0)
+#endif
+#elif RETRO_PLATFORM == RETRO_3DS
+#define RETRO_USING_SDL1       (0)
+#define RETRO_USING_SDL1_AUDIO (1)
+#define RETRO_USING_SDL2       (0)
 #else // Since its an else & not an elif these platforms probably aren't supported yet
 #define RETRO_USING_SDL1 (0)
 #define RETRO_USING_SDL2 (0)
+#endif
+
+#if RETRO_PLATFORM == RETRO_3DS
+#define Sint8  s8
+#define Sint16 s16
+#define Sint32 s32
+#define Sint64 s64
+#define Uint8  u8
+#define Uint16 u16
+#define Uint32 u32
+#define Uint64 u64
 #endif
 
 enum RetroLanguages { RETRO_EN = 0, RETRO_FR = 1, RETRO_IT = 2, RETRO_DE = 3, RETRO_ES = 4, RETRO_JP = 5 };
@@ -118,7 +143,9 @@ enum RetroBytecodeFormat {
 #elif RETRO_USING_SDL1
 #include <SDL.h>
 #endif
+#if RETRO_PLATFORM != RETRO_3DS
 #include <vorbis/vorbisfile.h>
+#endif
 #elif RETRO_PLATFORM == RETRO_OSX
 #include <SDL2/SDL.h>
 #include <Vorbis/vorbisfile.h>
@@ -129,6 +156,13 @@ enum RetroBytecodeFormat {
 #include <vorbis/vorbisfile.h>
 
 #include "cocoaHelpers.hpp"
+#elif RETRO_PLATFORM == RETRO_3DS
+#include <3ds.h>
+#include <tremor/ivorbisfile.h>
+#include <tremor/ivorbiscodec.h>
+#if RETRO_USING_SDL1_AUDIO
+#include <SDL/SDL.h>
+#endif
 #endif
 
 extern bool usingCWD;
@@ -154,6 +188,10 @@ extern bool engineDebugMode;
 #include "Video.hpp"
 #include "Userdata.hpp"
 #include "Debug.hpp"
+
+#if RETRO_PLATFORM == RETRO_3DS
+#include "3ds/3ds_func.hpp"
+#endif
 
 class RetroEngine
 {
@@ -232,6 +270,11 @@ public:
     SDL_Surface *videoBuffer    = nullptr;
 
     SDL_Event sdlEvents;
+#endif
+
+    // not separating render backends by preprocessors this time
+#if RETRO_PLATFORM == RETRO_3DS
+    char useC2DRender = 0;
 #endif
 };
 

@@ -620,7 +620,7 @@ void DrawHLineScrollLayer(int layerID)
                 tilePxLineCnt = TILE_SIZE - tilePxXPos;
                 lineRemain -= tilePxLineCnt;
                 switch (tiles128x128.direction[chunk]) {
-                    case FLIP_NONE:
+                    case FLIP_NO:
                         gfxDataPtr = &tilesetGFXData[tileOffsetY + tiles128x128.gfxDataPos[chunk] + tilePxXPos];
                         while (tilePxLineCnt--) {
                             if (*gfxDataPtr > 0)
@@ -682,7 +682,7 @@ void DrawHLineScrollLayer(int layerID)
                 // Loop Unrolling (faster but messier code)
                 if (tiles128x128.visualPlane[chunk] == (byte)aboveMidPoint) {
                     switch (tiles128x128.direction[chunk]) {
-                        case FLIP_NONE:
+                        case FLIP_NO:
                             gfxDataPtr = &tilesetGFXData[tiles128x128.gfxDataPos[chunk] + tileOffsetY];
                             if (*gfxDataPtr > 0)
                                 *pixelBufferPtr = *gfxDataPtr;
@@ -974,7 +974,7 @@ void DrawHLineScrollLayer(int layerID)
                 lineRemain -= tilePxLineCnt;
                 if (tiles128x128.visualPlane[chunk] == (byte)aboveMidPoint) {
                     switch (tiles128x128.direction[chunk]) {
-                        case FLIP_NONE:
+                        case FLIP_NO:
                             gfxDataPtr = &tilesetGFXData[tiles128x128.gfxDataPos[chunk] + tileOffsetY];
                             while (tilePxLineCnt--) {
                                 if (*gfxDataPtr > 0)
@@ -1119,7 +1119,7 @@ void DrawVLineScrollLayer(int layerID)
             tilePxLineCnt = 0x10 - tileY;
             lineRemain -= tilePxLineCnt;
             switch (tiles128x128.direction[chunk]) {
-                case FLIP_NONE:
+                case FLIP_NO:
                     gfxDataPtr = &tilesetGFXData[0x10 * tileY + tileX16 + tiles128x128.gfxDataPos[chunk]];
                     while (tilePxLineCnt--) {
                         if (*gfxDataPtr > 0)
@@ -1181,7 +1181,7 @@ void DrawVLineScrollLayer(int layerID)
             // Loop Unrolling (faster but messier code)
             if (tiles128x128.visualPlane[chunk] == (byte)aboveMidPoint) {
                 switch (tiles128x128.direction[chunk]) {
-                    case FLIP_NONE:
+                    case FLIP_NO:
                         gfxDataPtr = &tilesetGFXData[tiles128x128.gfxDataPos[chunk] + tileX16];
                         if (*gfxDataPtr > 0)
                             *pixelBufferPtr = *gfxDataPtr;
@@ -1474,7 +1474,7 @@ void DrawVLineScrollLayer(int layerID)
             lineRemain -= tilePxLineCnt;
             if (tiles128x128.visualPlane[chunk] == (byte)aboveMidPoint) {
                 switch (tiles128x128.direction[chunk]) {
-                    case FLIP_NONE:
+                    case FLIP_NO:
                         gfxDataPtr = &tilesetGFXData[0x10 * tileY + tileX16 + tiles128x128.gfxDataPos[chunk]];
                         while (tilePxLineCnt--) {
                             if (*gfxDataPtr > 0)

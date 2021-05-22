@@ -7,8 +7,16 @@ int main(int argc, char *argv[])
             usingCWD = true;
     }
 
+#if RETRO_PLATFORM == RETRO_3DS
+    _3ds_init();
+#endif
+
     Engine.Init();
     Engine.Run();
+
+#if RETRO_PLATFORM == RETRO_3DS
+    _3ds_exit();
+#endif
 
     return 0;
 }
