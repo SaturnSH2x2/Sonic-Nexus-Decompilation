@@ -315,6 +315,16 @@ void FlipScreen()
 
     SDL_RenderPresent(Engine.renderer);
 #endif
+
+#if RETRO_PLATFORM == RETRO_3DS
+    if (Engine.useC2DRender) {
+
+    } else {
+	CopyFrameBuffer((void*) Engine.pixelBuffer);
+    }
+
+    _3ds_flip();
+#endif
 }
 
 void ReleaseRenderDevice()
