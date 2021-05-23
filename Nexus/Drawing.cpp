@@ -207,6 +207,11 @@ void FlipScreen()
             memcpy(pixels, frameBuffer, pitch * SCREEN_YSIZE);
             SDL_UnlockTexture(Engine.screenBuffer);
 #endif
+
+#if RETRO_PLATFORM == RETRO_3DS
+	    //CopyFrameBuffer((void*)frameBuffer);
+#endif
+
             if (frameBuffer)
                 delete[] frameBuffer;
             break;
@@ -246,6 +251,10 @@ void FlipScreen()
             SDL_LockTexture(Engine.screenBuffer, NULL, &pixels, &pitch);
             memcpy(pixels, frameBuffer, pitch * SCREEN_YSIZE);
             SDL_UnlockTexture(Engine.screenBuffer);
+#endif
+
+#if RETRO_PLATFORM == RETRO_3DS
+	    CopyFrameBuffer16((u16*) frameBuffer);
 #endif
             if (frameBuffer)
                 delete[] frameBuffer;
@@ -317,12 +326,6 @@ void FlipScreen()
 #endif
 
 #if RETRO_PLATFORM == RETRO_3DS
-    if (Engine.useC2DRender) {
-
-    } else {
-	CopyFrameBuffer((void*) Engine.pixelBuffer);
-    }
-
     _3ds_flip();
 #endif
 }

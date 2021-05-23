@@ -84,7 +84,7 @@ typedef unsigned int uint;
 #define DEFAULT_FULLSCREEN   false
 #elif RETRO_PLATFORM == RETRO_3DS
 #define BASE_PATH            "/3ds/SonicNexus/"
-#define DEFAULT_SCREEN_XSIZE 320
+#define DEFAULT_SCREEN_XSIZE 400
 #define DEFAULT_FULLSCREEN   false
 #else
 #define BASE_PATH            ""
