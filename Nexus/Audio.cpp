@@ -23,6 +23,8 @@ MusicPlaybackInfo musInfo;
 
 int trackBuffer = -1;
 
+int readVorbisCallCounter = 0;
+
 #if RETRO_USING_SDL1_AUDIO || RETRO_USING_SDL2
 SDL_AudioSpec audioDeviceFormat;
 
@@ -155,6 +157,13 @@ void LoadGlobalSfx()
 #if RETRO_USING_SDL1_AUDIO || RETRO_USING_SDL2
 size_t readVorbis(void *mem, size_t size, size_t nmemb, void *ptr)
 {
+    // put some FLEX TAPE® on that audio read error
+    readVorbisCallCounter++;
+    if (readVorbisCallCounter > 100 && musicStatus == MUSIC_PLAYING) {
+	    readVorbisCallCounter = 0;
+	    return 0;
+    }
+
     MusicPlaybackInfo *info = (MusicPlaybackInfo *)ptr;
     return FileRead2(&info->fileInfo, mem, (int)(size * nmemb));
 }
@@ -168,7 +177,12 @@ int seekVorbis(void *ptr, ogg_int64_t offset, int whence)
         default: break;
     }
     SetFilePosition2(&info->fileInfo, (int)(whence + offset));
-    return GetFilePosition2(&info->fileInfo) <= info->fileInfo.vFileSize;
+    if (info->fileInfo.vFileSize < 0) {
+	    printLog("ERROR: vFileSize is less than 0\n");
+	    return 0;
+    }
+
+    return GetFilePosition2(&info->fileInfo) <= (uint)info->fileInfo.vFileSize;
 }
 long tellVorbis(void *ptr)
 {
@@ -226,6 +240,7 @@ void ProcessMusicStream(Sint32 *stream, size_t bytes_wanted)
             while (bytes_gotten < bytes_wanted) {
                 // We need more samples: get some
 #if RETRO_PLATFORM == RETRO_3DS
+		readVorbisCallCounter = 0;
 		// account for the API change with Tremor, as per usual
 		long bytes_read = ov_read(&musInfo.vorbisFile, (char*) musInfo.buffer,
 				sizeof(musInfo.buffer) > (bytes_wanted - bytes_gotten) ? (bytes_wanted - bytes_gotten) : sizeof(musInfo.buffer),
@@ -317,9 +332,10 @@ void ProcessAudioPlayback(void *userdata, Uint8 *stream, int len)
 
         if (LoadFile2(trackPtr->fileName, &musInfo.fileInfo)) {
             musInfo.trackLoop = trackPtr->trackLoop;
+	    musInfo.loopPoint = 0;
             musInfo.loaded    = true;
 
-            unsigned long long samples = 0;
+            //unsigned long long samples = 0;
             ov_callbacks callbacks;
 
             callbacks.read_func  = readVorbis;

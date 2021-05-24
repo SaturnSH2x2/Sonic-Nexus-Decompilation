@@ -5,7 +5,8 @@
 
 IniParser::IniParser(const char *filename)
 {
-    memset(items, 0, 0x80 * sizeof(ConfigItem));
+    //memset(items, 0, 0x80 * sizeof(ConfigItem));
+    items = new ConfigItem[0x80];
     char buf[0x100];
     char section[0x40];
     bool hasSection = false;
@@ -61,9 +62,9 @@ IniParser::IniParser(const char *filename)
         else if (sscanf(buf, "%[^ =]= %[^\t\r\n]", key, value) == 2 || sscanf(buf, "%[^ =]=%[^\t\r\n]", key, value) == 2
                  || sscanf(buf, "%[^ =] = %[^\t\r\n]", key, value) == 2 || sscanf(buf, "%[^ =] =%[^\t\r\n]", key, value) == 2) {
             if (hasSection)
-                sprintf(items[count].section, "%s", section);
-            else
-                sprintf(items[count].section, "", section);
+                snprintf(items[count].section, 0x40, "%s", section);
+            //else
+	    	//sprintf(items[count].section, "", section);
 
             sprintf(items[count].key, "%s", key);
             sprintf(items[count].value, "%s", value);
@@ -263,9 +264,9 @@ void IniParser::Write(const char *filename)
     }
 
     char sections[10][60];
-    char past[60];
+    char past[0x40];
     int c = 0;
-    sprintf(past, "");
+    //sprintf(past, "");
     for (int i = 0; i < count; ++i) {
         if (std::find(std::begin(sections), std::end(sections), items[i].section) == std::end(sections) && strcmp(past, items[i].section) != 0) {
             sprintf(past, "%s", items[i].section);
@@ -290,12 +291,18 @@ void IniParser::Write(const char *filename)
                 case INI_ITEM_INT:
                 case INI_ITEM_FLOAT:
                 case INI_ITEM_BOOL:
-                    sprintf(buffer, "%s=%s\n", items[i].key, items[i].value);
+                    //sprintf(buffer, "%s=%s\n", items[i].key, items[i].value);
+		    fWrite(items[i].key, 1, StrLength(items[i].key), f);
+		    fWrite("=", 1, 1, f);
+		    fWrite(items[i].value, 1, StrLength(items[i].value), f);
+		    fWrite("\n", 1, 1, f);
                     fWrite(&buffer, 1, StrLength(buffer), f);
                     break;
                 case INI_ITEM_COMMENT:
-                    sprintf(buffer, "; %s\n", items[i].value);
+                    //sprintf(buffer, "; %s\n", items[i].value);
+		    fWrite("; ", 1, 2, f);
                     fWrite(&buffer, 1, StrLength(buffer), f);
+		    fWrite("\n", 1, 1, f);
                     break;
             }
         }
@@ -315,12 +322,22 @@ void IniParser::Write(const char *filename)
                     case INI_ITEM_INT:
                     case INI_ITEM_FLOAT:
                     case INI_ITEM_BOOL:
-                        sprintf(buffer, "%s=%s\n", items[i].key, items[i].value);
-                        fWrite(&buffer, 1, StrLength(buffer), f);
+                        //sprintf(buffer, "%s=%s\n", items[i].key, items[i].value);
+                        //fWrite(&buffer, 1, StrLength(buffer), f);
+			fWrite(items[i].key, 1, StrLength(items[i].key), f);
+		    	fWrite("=", 1, 1, f);
+		    	fWrite(items[i].value, 1, StrLength(items[i].value), f);
+		    	fWrite("\n", 1, 1, f);
+                    	fWrite(&buffer, 1, StrLength(buffer), f);
+
                         break;
                     case INI_ITEM_COMMENT:
-                        sprintf(buffer, "; %s\n", items[i].value);
-                        fWrite(&buffer, 1, StrLength(buffer), f);
+                        //sprintf(buffer, "; %s\n", items[i].value);
+                        //fWrite(&buffer, 1, StrLength(buffer), f);
+			fWrite("; ", 1, 2, f);
+                    	fWrite(&buffer, 1, StrLength(buffer), f);
+		    	fWrite("\n", 1, 1, f);
+
                         break;
                 }
             }

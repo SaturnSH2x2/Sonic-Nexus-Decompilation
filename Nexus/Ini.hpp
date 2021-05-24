@@ -21,14 +21,14 @@ public:
             hasSection = false;
             type       = INI_ITEM_STRING;
         }
-        char section[0x20];
+        char section[0x40];
         bool hasSection = false;
         char key[0x40];
         char value[0x100];
         byte type = INI_ITEM_STRING;
     };
 
-    IniParser() { memset(items, 0, 0x80 * sizeof(ConfigItem)); }
+    IniParser() { items = new ConfigItem[0x80]; }
     IniParser(const char *filename);
 
     int GetString(const char *section, const char *key, char *dest);
@@ -42,7 +42,7 @@ public:
     int SetComment(const char *section, const char *key, const char *comment);
     void Write(const char *filename);
 
-    ConfigItem items[0x80];
+    ConfigItem* items;
 
     int count = 0;
 };

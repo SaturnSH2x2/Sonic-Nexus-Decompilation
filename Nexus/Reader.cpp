@@ -17,7 +17,7 @@ FileIO *cFileHandle = nullptr;
 
 bool CheckBinFile(const char *filePath)
 {
-    FileInfo info;
+    //FileInfo info;
 
     Engine.usingBinFile       = false;
     Engine.usingDataFileStore = false;
@@ -68,11 +68,14 @@ bool LoadFile(const char *filePath, FileInfo *fileInfo)
     fileInfo->isMod = false;
     isModdedFile    = false;
 #endif
+
+#if RETRO_PLATFORM == RETRO_OSX
     bool addPath    = true;
+#endif
     // Fixes any case differences
     char pathLower[0x100];
     memset(pathLower, 0, sizeof(char) * 0x100);
-    for (int c = 0; c < strlen(filePathBuf); ++c) {
+    for (uint c = 0; c < strlen(filePathBuf); ++c) {
         pathLower[c] = tolower(filePathBuf[c]);
     }
 
@@ -85,7 +88,9 @@ bool LoadFile(const char *filePath, FileInfo *fileInfo)
                 Engine.usingBinFile = false;
                 fileInfo->isMod     = true;
                 isModdedFile        = true;
+#if RETRO_PLATFORM == RETRO_OSX
                 addPath             = false;
+#endif
                 break;
             }
         }
@@ -427,11 +432,15 @@ bool LoadFile2(const char *filePath, FileInfo *fileInfo)
     fileInfo->isMod = false;
     isModdedFile    = false;
 #endif
+
+#if RETRO_PLATFORM == RETRO_OSX
     bool addPath = true;
+#endif
+
     // Fixes ".ani" ".Ani" bug and any other case differences
     char pathLower[0x100];
     memset(pathLower, 0, sizeof(char) * 0x100);
-    for (int c = 0; c < strlen(filePathBuf); ++c) {
+    for (uint c = 0; c < strlen(filePathBuf); ++c) {
         pathLower[c] = tolower(filePathBuf[c]);
     }
 
@@ -445,7 +454,11 @@ bool LoadFile2(const char *filePath, FileInfo *fileInfo)
                 Engine.usingBinFile = false;
                 fileInfo->isMod      = true;
                 isModdedFile         = true;
+
+#if RETRO_PLATFORM == RETRO_OSX
                 addPath              = false;
+#endif
+
                 break;
             }
         }

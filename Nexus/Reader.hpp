@@ -65,7 +65,7 @@ extern FileIO *cFileHandle;
 inline void CopyFilePath(char *dest, const char *src)
 {
     strcpy(dest, src);
-    for (int i = 0;; ++i) {
+    for (uint i = 0;; ++i) {
         if (i >= strlen(dest)) {
             break;
         }

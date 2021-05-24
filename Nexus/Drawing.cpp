@@ -18,9 +18,12 @@ byte graphicData[GFXDATA_MAX];
 
 int InitRenderDevice()
 {
+
+#if RETRO_USING_SDL1 || RETRO_USING_SDL2
     char gameTitle[0x40];
 
     sprintf(gameTitle, "%s%s", Engine.gameWindowText, Engine.usingBinFile ? "" : " (Using Data Folder)");
+#endif
 
     Engine.pixelBuffer = new byte[SCREEN_XSIZE * SCREEN_YSIZE];
     memset(Engine.pixelBuffer, 0, (SCREEN_XSIZE * SCREEN_YSIZE) * sizeof(byte));
@@ -163,8 +166,8 @@ void FlipScreen()
     SDL_RenderClear(Engine.renderer);
 #endif
 
-    int pitch      = 0;
-    void *pixels = NULL;
+    //int pitch      = 0;
+    //void *pixels = NULL;
 
     switch (Engine.colourMode) {
         case 0: // 8-bit
@@ -1544,7 +1547,11 @@ void DrawVLineScrollLayer(int layerID)
         }
     }
 }
-void Draw3DCloudLayer(int layerID) { TileLayer *layer = &stageLayouts[activeTileLayers[layerID]]; }
+
+/* bruh */
+void Draw3DCloudLayer(int layerID) { 
+     //TileLayer *layer = &stageLayouts[activeTileLayers[layerID]]; 
+}
 
 void DrawTintRectangle(int XPos, int YPos, int width, int height, byte tintID)
 {

@@ -197,7 +197,7 @@ void FindLWallPosition(Player *player, CollisionSensor *sensor, int startX)
 void FindRoofPosition(Player *player, CollisionSensor *sensor, int startY)
 {
     int c     = 0;
-    int angle = sensor->angle;
+    //int angle = sensor->angle;
     int tsm1  = (TILE_SIZE - 1);
     for (int i = 0; i < TILE_SIZE * 3; i += TILE_SIZE) {
         if (!sensor->collided) {

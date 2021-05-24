@@ -11,15 +11,12 @@ int main(int argc, char *argv[])
 #else
     _3ds_init();
 #endif
-    printf("Sonic Nexus 3DS\n");
-    hang();
-
-    printf("Initializing engine...\n");
     Engine.Init();
-    printf("Engine initialized.\n");
-    hang();
 
+#if RETRO_PLATFORM == RETRO_3DS
     _3ds_setColorDepth();
+#endif
+
     Engine.Run();
 
 #if RETRO_PLATFORM == RETRO_3DS
