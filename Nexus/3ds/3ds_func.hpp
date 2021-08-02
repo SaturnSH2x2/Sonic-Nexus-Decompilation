@@ -5,6 +5,9 @@ int  _3ds_init();
 void _3ds_exit();
 
 // framebuffer copy for SW rendering
-void CopyFrameBuffer(u16* ptr);
+void CopyFrameBuffer16(u16* ptr);
+void _3ds_flip();
+void _3ds_setColorDepth();
+void hang();
 
 #endif

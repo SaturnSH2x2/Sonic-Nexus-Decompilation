@@ -25,6 +25,15 @@ int trackBuffer = -1;
 
 int readVorbisCallCounter = 0;
 
+#if RETRO_USING_SDLMIXER
+
+#define AUDIO_FREQUENCY (44100)
+#define AUDIO_FORMAT    (AUDIO_S16SYS) /**< Signed 16-bit samples */
+#define AUDIO_SAMPLES   (0x800)
+#define AUDIO_CHANNELS  (2)
+
+#endif
+
 #if RETRO_USING_SDL1_AUDIO || RETRO_USING_SDL2
 SDL_AudioSpec audioDeviceFormat;
 
@@ -83,6 +92,12 @@ int InitAudioPlayback()
     }
 #endif // !RETRO_USING_SDL1_AUDIO
 
+#elif RETRO_USING_SDLMIXER
+    if (Mix_OpenAudio(AUDIO_FREQUENCY, AUDIO_FORMAT, AUDIO_CHANNELS, 1024) == -1) {
+	printLog("Unable to init SDL mixer: %s\n", Mix_GetError());
+	audioEnabled = false;
+	return true;
+    }
 #endif
 
     LoadGlobalSfx();
@@ -196,6 +211,7 @@ int closeVorbis(void *ptr)
 }
 #endif
 
+#if RETRO_USING_SDL2 || RETRO_USING_SDL1_AUDIO
 void ProcessMusicStream(Sint32 *stream, size_t bytes_wanted)
 {
     if (!musInfo.loaded)
@@ -335,6 +351,7 @@ void ProcessAudioPlayback(void *userdata, Uint8 *stream, int len)
 	    musInfo.loopPoint = 0;
             musInfo.loaded    = true;
 
+#if RETRO_USING_SDL2 || RETRO_USING_SDL1_AUDIO
             //unsigned long long samples = 0;
             ov_callbacks callbacks;
 
@@ -346,6 +363,7 @@ void ProcessAudioPlayback(void *userdata, Uint8 *stream, int len)
             int error = ov_open_callbacks(&musInfo, &musInfo.vorbisFile, NULL, 0, callbacks);
             if (error != 0) {
             }
+#endif
 
             musInfo.vorbBitstream = -1;
             musInfo.vorbisFile.vi = ov_info(&musInfo.vorbisFile, -1);
@@ -484,6 +502,7 @@ void ProcessAudioMixing(Sint32 *dst, const Sint16 *src, int len, int volume, sby
         i++;
     }
 }
+#endif
 #endif
 
 void SetMusicTrack(char *filePath, byte trackID, bool loop)

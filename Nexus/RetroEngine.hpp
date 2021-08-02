@@ -98,6 +98,7 @@ typedef unsigned int uint;
     || RETRO_PLATFORM == RETRO_UWP
 #define RETRO_USING_SDL1       (0)
 #define RETRO_USING_SDL2       (1)
+#define RETRO_USING_SDLMIXER   (0)
 #if RETRO_USING_SDL1
 #define RETRO_USING_SDL1_AUDIO (1)
 #else
@@ -105,11 +106,13 @@ typedef unsigned int uint;
 #endif
 #elif RETRO_PLATFORM == RETRO_3DS
 #define RETRO_USING_SDL1       (0)
-#define RETRO_USING_SDL1_AUDIO (1)
+#define RETRO_USING_SDL1_AUDIO (0)
 #define RETRO_USING_SDL2       (0)
+#define RETRO_USING_SDLMIXER   (1)
 #else // Since its an else & not an elif these platforms probably aren't supported yet
-#define RETRO_USING_SDL1 (0)
-#define RETRO_USING_SDL2 (0)
+#define RETRO_USING_SDL1     (0)
+#define RETRO_USING_SDL2     (0)
+#define RETRO_USING_SDLMIXER (0)
 #endif
 
 #if RETRO_PLATFORM == RETRO_3DS
@@ -164,8 +167,11 @@ enum RetroBytecodeFormat {
 #include <3ds.h>
 #include <tremor/ivorbisfile.h>
 #include <tremor/ivorbiscodec.h>
-#if RETRO_USING_SDL1_AUDIO
+#if RETRO_USING_SDL1_AUDIO || RETRO_USING_SDLMIXER
 #include <SDL/SDL.h>
+#if RETRO_USING_SDLMIXER
+#include <SDL/SDL_mixer.h>
+#endif
 #endif
 #endif
 

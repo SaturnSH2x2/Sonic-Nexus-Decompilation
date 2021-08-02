@@ -41,6 +41,9 @@ struct MusicPlaybackInfo {
 
 struct SFXInfo {
     char name[0x40];
+#if RETRO_USING_SDLMIXER
+    Mix_Chunk* chunk;
+#endif
     Sint16 *buffer;
     size_t length;
     bool loaded;
@@ -118,9 +121,9 @@ inline void freeMusInfo()
     }
 }
 #else
-void ProcessMusicStream() {}
-void ProcessAudioPlayback() {}
-void ProcessAudioMixing() {}
+//void ProcessMusicStream() {}
+//void ProcessAudioPlayback() {}
+//void ProcessAudioMixing() {}
 
 inline void freeMusInfo()
 {
