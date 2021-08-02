@@ -21,6 +21,10 @@
 struct TrackInfo {
     char fileName[0x40];
     bool trackLoop;
+
+#if RETRO_USING_SDLMIXER
+    Mix_Music* mus;
+#endif
 };
 
 struct MusicPlaybackInfo {
@@ -84,10 +88,14 @@ extern ChannelInfo sfxChannels[CHANNEL_COUNT];
 
 extern MusicPlaybackInfo musInfo;
 
+#if RETRO_USING_SDLMIXER
+extern int currentTrack;
+extern int previousTrack;
+#endif
+
 #if RETRO_USING_SDL1_AUDIO || RETRO_USING_SDL2
 extern SDL_AudioSpec audioDeviceFormat;
 #endif
-
 int InitAudioPlayback();
 void LoadGlobalSfx();
 
@@ -148,6 +156,13 @@ void SetMusicTrack(char *filePath, byte trackID, bool loop);
 bool PlayMusic(int track);
 inline void StopMusic()
 {
+#if RETRO_USING_SDLMIXER
+    Mix_HaltMusic();
+
+    currentTrack = -1;
+    previousTrack = -1;
+#endif
+
     musicStatus = MUSIC_STOPPED;
     freeMusInfo();
 }
@@ -167,6 +182,10 @@ void SetSfxAttributes(int sfx, int loopCount, sbyte pan);
 
 inline void SetMusicVolume(int volume)
 {
+#if RETRO_USING_SDLMIXER
+    Mix_VolumeMusic(volume);
+#endif
+
     if (volume < 0)
         volume = 0;
     if (volume > MAX_VOLUME)
@@ -176,12 +195,20 @@ inline void SetMusicVolume(int volume)
 
 inline void PauseSound()
 {
+#if RETRO_USING_SDLMIXER
+    Mix_PauseMusic();
+#endif
+
     if (musicStatus == MUSIC_PLAYING)
         musicStatus = MUSIC_PAUSED;
 }
 
 inline void ResumeSound()
 {
+#if RETRO_USING_SDLMIXER
+    Mix_ResumeMusic();
+#endif
+
     if (musicStatus == MUSIC_PAUSED)
         musicStatus = MUSIC_PLAYING;
 }
@@ -196,6 +223,10 @@ inline void ReleaseGlobalSfx()
     StopAllSfx();
     for (int i = globalSFXCount - 1; i >= 0; --i) {
         if (sfxList[i].loaded) {
+#if RETRO_USING_SDLMIXER
+    	    Mix_FreeChunk(sfxList[i].chunk);
+#endif
+
             StrCopy(sfxList[i].name, "");
             free(sfxList[i].buffer);
             sfxList[i].length = 0;
@@ -208,6 +239,10 @@ inline void ReleaseStageSfx()
 {
     for (int i = stageSFXCount + globalSFXCount; i >= globalSFXCount; --i) {
         if (sfxList[i].loaded) {
+#if RETRO_USING_SDLMIXER
+	    Mix_FreeChunk(sfxList[i].chunk);
+#endif
+
             StrCopy(sfxList[i].name, "");
             free(sfxList[i].buffer);
             sfxList[i].length = 0;
@@ -223,6 +258,10 @@ inline void ReleaseAudioDevice()
     StopAllSfx();
     ReleaseStageSfx();
     ReleaseGlobalSfx();
+
+#if RETRO_USING_SDLMIXER
+    Mix_CloseAudio();
+#endif
 }
 
 #endif // !AUDIO_H

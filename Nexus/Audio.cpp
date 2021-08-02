@@ -32,6 +32,9 @@ int readVorbisCallCounter = 0;
 #define AUDIO_SAMPLES   (0x800)
 #define AUDIO_CHANNELS  (2)
 
+int currentTrack = -1;
+int previousTrack = -1;
+
 #endif
 
 #if RETRO_USING_SDL1_AUDIO || RETRO_USING_SDL2
@@ -98,6 +101,8 @@ int InitAudioPlayback()
 	audioEnabled = false;
 	return true;
     }
+
+    audioEnabled = true;
 #endif
 
     LoadGlobalSfx();
@@ -372,7 +377,7 @@ void ProcessAudioPlayback(void *userdata, Uint8 *stream, int len)
             musInfo.stream = SDL_NewAudioStream(AUDIO_S16, musInfo.vorbisFile.vi->channels, musInfo.vorbisFile.vi->rate, audioDeviceFormat.format,
                                                 audioDeviceFormat.channels, audioDeviceFormat.freq);
             if (!musInfo.stream) {
-                printLog("Failed to create stream: %s", SDL_GetError());
+     previousTrackprintLog("Failed to create stream: %s", SDL_GetError());
             }
 #endif
 
@@ -512,8 +517,19 @@ void SetMusicTrack(char *filePath, byte trackID, bool loop)
     StrCopy(track->fileName, "Data/Music/");
     StrAdd(track->fileName, filePath);
     track->trackLoop = loop;
+
     UNLOCK_AUDIO_DEVICE()
 }
+
+#if RETRO_USING_SDLMIXER
+void MixHook() {
+	musicStatus = MUSIC_STOPPED;
+	if (previousTrack > -1) {
+		PlayMusic(previousTrack);
+	}
+}
+#endif
+
 bool PlayMusic(int track)
 {
     if (!audioEnabled)
@@ -527,9 +543,49 @@ bool PlayMusic(int track)
     }
     trackBuffer = track;
     musicStatus = MUSIC_LOADING;
+
+#if RETRO_USING_SDLMIXER
+    FileInfo info;
+    char fullPath[0x80];
+
+    if (Mix_PlayingMusic())
+	    previousTrack = currentTrack;
+
+    StrCopy(fullPath, musicTracks[track].fileName);
+
+    if (LoadFile(fullPath, &info)) {
+	byte* mus = new byte[info.fileSize];
+	FileRead(mus, info.fileSize);
+	CloseFile();
+
+        //Un-encrypt sfx
+        if (info.encrypted) {
+            for (int i = 0; i < info.fileSize; ++i) mus[i] ^= 0xFF;
+        }
+
+        SDL_RWops* src = SDL_RWFromMem(mus, info.fileSize);
+	if (src == NULL) {
+	    printLog("Unable to open music: %s", info.fileName);
+	} else {
+	   musicTracks[track].mus  = Mix_LoadMUS_RW(src);
+	   if (!musicTracks[track].mus) {
+		printLog("Unable to read music: %s", info.fileName);
+	   }
+	}
+
+	Mix_HookMusicFinished(MixHook);
+	Mix_VolumeMusic(MIX_MAX_VOLUME);
+	Mix_PlayMusic(musicTracks[track].mus, musicTracks[track].trackLoop ? -1 : 1);
+	musicStatus = MUSIC_PLAYING;
+
+	currentTrack = track;
+    }
+#endif
+
     UNLOCK_AUDIO_DEVICE()
     return true;
 }
+
 
 void LoadSfx(char *filePath, byte sfxID)
 {
@@ -552,7 +608,20 @@ void LoadSfx(char *filePath, byte sfxID)
             for (int i = 0; i < info.fileSize; ++i) sfx[i] ^= 0xFF;
         }
 
-#if RETRO_USING_SDL1_AUDIO || RETRO_USING_SDL2
+#if RETRO_USING_SDLMIXER
+	SDL_RWops *src = SDL_RWFromMem(sfx, info.fileSize);
+	if (src == NULL) {
+	    printLog("Unable to open sfx: %s", info.fileName);
+	} else {
+	    sfxList[sfxID].chunk = Mix_LoadWAV_RW(src, 1);
+	    if (!sfxList[sfxID].chunk) {
+		printLog("Unable to read sfx: %s", info.fileName);
+	    } else {
+		StrCopy(sfxList[sfxID].name, filePath);
+		sfxList[sfxID].loaded = true;
+	    }
+	}
+#elif RETRO_USING_SDL1_AUDIO || RETRO_USING_SDL2
         SDL_LockAudio();
         SDL_RWops *src = SDL_RWFromMem(sfx, info.fileSize);
         if (src == NULL) {
@@ -604,6 +673,7 @@ void LoadSfx(char *filePath, byte sfxID)
 void PlaySfx(int sfx, bool loop)
 {
     LOCK_AUDIO_DEVICE()
+#if RETRO_USING_SDL1_AUDIO || RETRO_USING_SDL2
     int sfxChannelID = nextChannelPos++;
     for (int c = 0; c < CHANNEL_COUNT; ++c) {
         if (sfxChannels[c].sfxID == sfx) {
@@ -620,11 +690,17 @@ void PlaySfx(int sfx, bool loop)
     sfxInfo->pan          = 0;
     if (nextChannelPos == CHANNEL_COUNT)
         nextChannelPos = 0;
+#elif RETRO_USING_SDLMIXER
+    Mix_PlayChannel(-1, sfxList[sfx].chunk, 0);
+#endif
+
     UNLOCK_AUDIO_DEVICE()
 }
 void SetSfxAttributes(int sfx, int loopCount, sbyte pan)
 {
     LOCK_AUDIO_DEVICE()
+
+#if RETRO_USING_SDL1_AUDIO || RETRO_USING_SDL2
     int sfxChannel = -1;
     for (int i = 0; i < CHANNEL_COUNT; ++i) {
         if (sfxChannels[i].sfxID == sfx || sfxChannels[i].sfxID == -1) {
@@ -642,5 +718,11 @@ void SetSfxAttributes(int sfx, int loopCount, sbyte pan)
     sfxInfo->loopSFX      = loopCount == -1 ? sfxInfo->loopSFX : loopCount;
     sfxInfo->pan          = pan;
     sfxInfo->sfxID        = sfx;
+#elif RETRO_USING_SDLMIXER
+    u8 l = (pan < 0) ? abs(pan) * 2 : 0;
+    u8 r = (pan > 0) ? pan * 2 : 0;
+    Mix_SetPanning(1, l, r);
+    Mix_PlayChannel(1, sfxList[sfx].chunk, 0);
+#endif
     UNLOCK_AUDIO_DEVICE()
 }
