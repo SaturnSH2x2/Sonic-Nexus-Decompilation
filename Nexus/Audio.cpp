@@ -523,15 +523,13 @@ void SetMusicTrack(char *filePath, byte trackID, bool loop)
 
 #if RETRO_USING_SDLMIXER
 void MixHook() {
-	musicStatus = MUSIC_STOPPED;
-	if (previousTrack > -1) {
-		PlayMusic(previousTrack);
-	}
+	musicStatus = MUSIC_READY;
 }
 #endif
 
 bool PlayMusic(int track)
 {
+    printLog("PlayMusic() called");
     if (!audioEnabled)
         return false;
 
@@ -574,9 +572,11 @@ bool PlayMusic(int track)
 	}
 
 	Mix_HookMusicFinished(MixHook);
-	Mix_VolumeMusic(MIX_MAX_VOLUME);
+	Mix_VolumeMusic(MAX_VOLUME);
 	Mix_PlayMusic(musicTracks[track].mus, musicTracks[track].trackLoop ? -1 : 1);
 	musicStatus = MUSIC_PLAYING;
+	trackID = track;
+	trackBuffer = -1;
 
 	currentTrack = track;
     }

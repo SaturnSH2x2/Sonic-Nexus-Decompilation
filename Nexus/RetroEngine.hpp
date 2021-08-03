@@ -184,6 +184,7 @@ extern bool engineDebugMode;
 #include "String.hpp"
 #include "Reader.hpp"
 #include "Animation.hpp"
+#include "Debug.hpp"
 #include "Audio.hpp"
 #include "Input.hpp"
 #include "Object.hpp"
@@ -197,7 +198,6 @@ extern bool engineDebugMode;
 #include "Text.hpp"
 #include "Video.hpp"
 #include "Userdata.hpp"
-#include "Debug.hpp"
 
 #if RETRO_PLATFORM == RETRO_3DS
 #include "3ds/3ds_func.hpp"

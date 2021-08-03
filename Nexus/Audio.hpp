@@ -158,10 +158,11 @@ inline void StopMusic()
 {
 #if RETRO_USING_SDLMIXER
     Mix_HaltMusic();
-
+    
     currentTrack = -1;
     previousTrack = -1;
 #endif
+    printLog("StopMusic() called");
 
     musicStatus = MUSIC_STOPPED;
     freeMusInfo();
@@ -185,6 +186,7 @@ inline void SetMusicVolume(int volume)
 #if RETRO_USING_SDLMIXER
     Mix_VolumeMusic(volume);
 #endif
+     printLog("SetMusicVolume() called");
 
     if (volume < 0)
         volume = 0;
@@ -198,6 +200,7 @@ inline void PauseSound()
 #if RETRO_USING_SDLMIXER
     Mix_PauseMusic();
 #endif
+    printLog("PauseSound() called");
 
     if (musicStatus == MUSIC_PLAYING)
         musicStatus = MUSIC_PAUSED;
@@ -208,6 +211,7 @@ inline void ResumeSound()
 #if RETRO_USING_SDLMIXER
     Mix_ResumeMusic();
 #endif
+    printLog("ResumeSound() called");
 
     if (musicStatus == MUSIC_PAUSED)
         musicStatus = MUSIC_PLAYING;
